@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bandwidth Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h2>Group Bandwidth Usage (Mbps)</h2>
+    <canvas id="bwChart" width="400" height="200"></canvas>
+    <script>
+        let ctx = document.getElementById('bwChart').getContext('2d');
+        let bwChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Faculty', 'Lab', 'Student'],
+                datasets: [{
+                    label: 'Bandwidth (Mbps)',
+                    data: [0, 0, 0],
+                    backgroundColor: ['blue', 'green', 'red']
+                }]
+            }
+        });
+        function updateChart() {
+            fetch('/api/group_stats').then(r => r.json()).then(data => {
+                bwChart.data.datasets[0].data = [
+                    data.faculty, data.lab, data.student
+                ];
+                bwChart.update();
+            });
+        }
+        setInterval(updateChart, 2000);
+        updateChart();
+    </script>
+</body>
+</html>
