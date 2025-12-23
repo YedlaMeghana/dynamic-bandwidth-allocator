@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Flask
+instance/
+.webassets-cache
+
+# Temporary files
+*.log
+*.tmp
+/tmp/
+/logs/
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Mininet
+*.pyc
+*.pcap
+
+# Project specific temporary files
+/tmp/group_stats.json
+/tmp/exam_schedule.json
+/tmp/bandwidth.log
+/tmp/controller.log
+/tmp/exam_mode.log
+/tmp/ryu_output.log
+/tmp/faculty_ips.json
+/tmp/exam_mode_control.json
