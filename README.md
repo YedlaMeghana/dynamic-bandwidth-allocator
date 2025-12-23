@@ -445,11 +445,26 @@ This project is open source and available for educational purposes.
 
 ## 🚀 Next Steps
 
-1. **Read [SETUP_GUIDE.md](SETUP_GUIDE.md)** to install everything
-2. **Read [SDN_BASICS.md](SDN_BASICS.md)** to understand concepts
-3. **Run the quick start** commands above
-4. **Follow [TESTING_GUIDE.md](TESTING_GUIDE.md)** to verify
-5. **Prepare your demo** using [DEMO_GUIDE.md](DEMO_GUIDE.md)
+### 🎯 **Complete Beginners Start Here:**
+
+**👉 Read [GETTING_STARTED.md](GETTING_STARTED.md) first!**
+
+This guide walks you through everything step-by-step, from zero knowledge to final demo.
+
+### 📚 Documentation Order (Follow This Path):
+
+1. **[GETTING_STARTED.md](GETTING_STARTED.md)** ⭐ START HERE
+   - Your complete learning path
+   - What to do and when
+   - Time estimates and checkpoints
+
+2. **[SDN_BASICS.md](SDN_BASICS.md)** - Understand SDN concepts
+3. **[SETUP_GUIDE.md](SETUP_GUIDE.md)** - Install everything
+4. **[ARCHITECTURE.md](ARCHITECTURE.md)** - Project structure
+5. **[TESTING_GUIDE.md](TESTING_GUIDE.md)** - Verify it works
+6. **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Fix problems
+7. **[DEMO_GUIDE.md](DEMO_GUIDE.md)** - Prepare presentation
+8. **[VIVA_QUESTIONS.md](VIVA_QUESTIONS.md)** - Q&A preparation
 
 ---
 
