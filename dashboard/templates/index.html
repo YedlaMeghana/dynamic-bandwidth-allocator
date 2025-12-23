@@ -1,13 +1,468 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Bandwidth Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDN Bandwidth Allocator - Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .status-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .status-card {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            flex: 1;
+            min-width: 200px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .status-label {
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .status-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .status-value.active {
+            color: #22c55e;
+        }
+        
+        .status-value.inactive {
+            color: #ef4444;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 1024px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        .bandwidth-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-box {
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-box.faculty {
+            background: rgba(59, 130, 246, 0.1);
+            border: 2px solid #3b82f6;
+        }
+        
+        .stat-box.lab {
+            background: rgba(34, 197, 94, 0.1);
+            border: 2px solid #22c55e;
+        }
+        
+        .stat-box.student {
+            background: rgba(239, 68, 68, 0.1);
+            border: 2px solid #ef4444;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+        }
+        
+        .stat-box.faculty .stat-value {
+            color: #3b82f6;
+        }
+        
+        .stat-box.lab .stat-value {
+            color: #22c55e;
+        }
+        
+        .stat-box.student .stat-value {
+            color: #ef4444;
+        }
+        
+        .stat-unit {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .exam-mode-toggle {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .exam-mode-toggle.active {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: #22c55e;
+        }
+        
+        .toggle-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .toggle-label {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 30px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #22c55e;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+        
+        .exam-info {
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .schedule-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .form-group label {
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .form-group input {
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-success {
+            background: #22c55e;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #16a34a;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        
+        .schedules-list {
+            margin-top: 15px;
+        }
+        
+        .schedule-item {
+            padding: 10px;
+            background: #f8fafc;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        
+        .schedule-item.active {
+            background: rgba(34, 197, 94, 0.1);
+            border-left: 3px solid #22c55e;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 5px;
+        }
+        
+        .badge.success {
+            background: #22c55e;
+            color: white;
+        }
+        
+        .badge.warning {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-    <h2>Group Bandwidth Usage (Mbps)</h2>
-    <canvas id="bwChart" width="400" height="200"></canvas>
+    <div class="container">
+        <header>
+            <h1>🌐 Dynamic Bandwidth Allocator</h1>
+            <p class="subtitle">Software-Defined Networking (SDN) Dashboard - Real-time Monitoring & Control</p>
+        </header>
+        
+        <div class="status-bar">
+            <div class="status-card">
+                <div class="status-label">Controller Status</div>
+                <div class="status-value" id="controllerStatus">
+                    <span class="loading"></span> Checking...
+                </div>
+            </div>
+            <div class="status-card">
+                <div class="status-label">Exam Mode</div>
+                <div class="status-value" id="examModeStatus">Normal</div>
+            </div>
+            <div class="status-card">
+                <div class="status-label">Last Update</div>
+                <div class="status-value" id="lastUpdate" style="font-size: 14px;">Never</div>
+            </div>
+        </div>
+        
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">📊 Real-Time Bandwidth Usage</div>
+                <div class="chart-container">
+                    <canvas id="bwChart"></canvas>
+                </div>
+                <div class="bandwidth-stats">
+                    <div class="stat-box faculty">
+                        <div class="stat-label">Faculty</div>
+                        <div class="stat-value" id="facultyBw">0</div>
+                        <div class="stat-unit">Mbps</div>
+                    </div>
+                    <div class="stat-box lab">
+                        <div class="stat-label">Lab</div>
+                        <div class="stat-value" id="labBw">0</div>
+                        <div class="stat-unit">Mbps</div>
+                    </div>
+                    <div class="stat-box student">
+                        <div class="stat-label">Student</div>
+                        <div class="stat-value" id="studentBw">0</div>
+                        <div class="stat-unit">Mbps</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-panel">
+                <div class="card">
+                    <div class="card-title">⚙️ Control Panel</div>
+                    
+                    <div class="exam-mode-toggle" id="examModePanel">
+                        <div class="toggle-header">
+                            <span class="toggle-label">Exam Mode</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="examModeToggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <p class="exam-info">During exam mode, lab computers get higher priority</p>
+                    </div>
+                    
+                    <div class="schedule-form">
+                        <div class="form-group">
+                            <label>Exam Name</label>
+                            <input type="text" id="examName" placeholder="Mid-term Exam" value="Scheduled Exam">
+                        </div>
+                        <div class="form-group">
+                            <label>Start Time</label>
+                            <input type="time" id="startTime" value="09:00">
+                        </div>
+                        <div class="form-group">
+                            <label>End Time</label>
+                            <input type="time" id="endTime" value="12:00">
+                        </div>
+                        <button class="btn btn-primary" onclick="scheduleExam()">📅 Schedule Exam</button>
+                    </div>
+                    
+                    <div class="schedules-list" id="schedulesList">
+                        <!-- Schedules will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Dynamic Bandwidth Allocator | Final Year Project | SDN with Mininet & Ryu</p>
+            <p style="font-size: 12px; margin-top: 5px; opacity: 0.8;">Dashboard updates every 2 seconds</p>
+        </div>
+    </div>
+    
     <script>
+        // Initialize chart
         let ctx = document.getElementById('bwChart').getContext('2d');
         let bwChart = new Chart(ctx, {
             type: 'bar',
@@ -16,20 +471,180 @@
                 datasets: [{
                     label: 'Bandwidth (Mbps)',
                     data: [0, 0, 0],
-                    backgroundColor: ['blue', 'green', 'red']
+                    backgroundColor: [
+                        'rgba(59, 130, 246, 0.7)',
+                        'rgba(34, 197, 94, 0.7)',
+                        'rgba(239, 68, 68, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgb(59, 130, 246)',
+                        'rgb(34, 197, 94)',
+                        'rgb(239, 68, 68)'
+                    ],
+                    borderWidth: 2
                 }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value + ' Mbps';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.parsed.y.toFixed(2) + ' Mbps';
+                            }
+                        }
+                    }
+                }
             }
         });
+        
+        // Update bandwidth chart and stats
         function updateChart() {
-            fetch('/api/group_stats').then(r => r.json()).then(data => {
-                bwChart.data.datasets[0].data = [
-                    data.faculty, data.lab, data.student
-                ];
-                bwChart.update();
+            fetch('/api/group_stats')
+                .then(r => r.json())
+                .then(data => {
+                    bwChart.data.datasets[0].data = [
+                        data.faculty, data.lab, data.student
+                    ];
+                    bwChart.update('none'); // Update without animation for smoothness
+                    
+                    // Update stat boxes
+                    document.getElementById('facultyBw').textContent = data.faculty.toFixed(2);
+                    document.getElementById('labBw').textContent = data.lab.toFixed(2);
+                    document.getElementById('studentBw').textContent = data.student.toFixed(2);
+                })
+                .catch(err => console.error('Error fetching stats:', err));
+        }
+        
+        // Update system status
+        function updateStatus() {
+            fetch('/api/system_status')
+                .then(r => r.json())
+                .then(data => {
+                    const controllerStatus = document.getElementById('controllerStatus');
+                    if (data.controller_active) {
+                        controllerStatus.innerHTML = '<span class="active">● Active</span>';
+                    } else {
+                        controllerStatus.innerHTML = '<span class="inactive">● Inactive</span>';
+                    }
+                    
+                    const examStatus = document.getElementById('examModeStatus');
+                    if (data.exam_mode) {
+                        examStatus.innerHTML = '<span class="active">EXAM MODE</span>';
+                        document.getElementById('examModePanel').classList.add('active');
+                    } else {
+                        examStatus.textContent = 'Normal';
+                        document.getElementById('examModePanel').classList.remove('active');
+                    }
+                    
+                    if (data.last_update) {
+                        const time = new Date(data.last_update);
+                        document.getElementById('lastUpdate').textContent = time.toLocaleTimeString();
+                    }
+                })
+                .catch(err => console.error('Error fetching status:', err));
+        }
+        
+        // Update exam schedules
+        function updateSchedules() {
+            fetch('/api/exam_mode')
+                .then(r => r.json())
+                .then(data => {
+                    const schedulesList = document.getElementById('schedulesList');
+                    if (data.schedules && data.schedules.length > 0) {
+                        schedulesList.innerHTML = '<p style="font-size: 13px; color: #666; margin-bottom: 10px;">Scheduled Exams:</p>';
+                        data.schedules.forEach(s => {
+                            const div = document.createElement('div');
+                            div.className = 'schedule-item' + (s.active ? ' active' : '');
+                            div.innerHTML = `
+                                <strong>${s.name}</strong>
+                                ${s.active ? '<span class="badge success">ACTIVE</span>' : ''}
+                                <br>
+                                <small>${s.start_time} - ${s.end_time}</small>
+                            `;
+                            schedulesList.appendChild(div);
+                        });
+                    }
+                })
+                .catch(err => console.error('Error fetching schedules:', err));
+        }
+        
+        // Toggle exam mode
+        document.getElementById('examModeToggle').addEventListener('change', function() {
+            const active = this.checked;
+            fetch('/api/exam_mode', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({active: active})
+            })
+            .then(r => r.json())
+            .then(data => {
+                console.log('Exam mode toggled:', data);
+                updateStatus();
+            })
+            .catch(err => console.error('Error toggling exam mode:', err));
+        });
+        
+        // Schedule exam
+        function scheduleExam() {
+            const name = document.getElementById('examName').value;
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            
+            if (!name || !startTime || !endTime) {
+                alert('Please fill all fields');
+                return;
+            }
+            
+            fetch('/api/schedule_exam', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    name: name,
+                    start_time: startTime,
+                    end_time: endTime
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'scheduled') {
+                    alert(`Exam scheduled: ${name} from ${startTime} to ${endTime}`);
+                    updateSchedules();
+                } else {
+                    alert('Error scheduling exam');
+                }
+            })
+            .catch(err => {
+                console.error('Error scheduling exam:', err);
+                alert('Error scheduling exam');
             });
         }
-        setInterval(updateChart, 2000);
+        
+        // Update everything every 2 seconds
+        setInterval(() => {
+            updateChart();
+            updateStatus();
+            updateSchedules();
+        }, 2000);
+        
+        // Initial update
         updateChart();
+        updateStatus();
+        updateSchedules();
     </script>
 </body>
 </html>
